@@ -12,19 +12,22 @@ import (
 	"time"
 )
 
-type GoogleDriveService struct {
-	oAuthService IOAuthService
-}
-
 type CreateFolderRequest struct {
-	UserID      string   `json:"-"`
+	UserID      string   `json:"user_id"`
+	Email       string   `json:"email"`
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
 	Parents     []string `json:"parents"`
 }
 
 func (service *GoogleDriveService) CreateFolder(ctx context.Context, req *CreateFolderRequest) (*drive.File, error) {
-	srv, err := service.newDriveService(ctx, req.UserID)
+	newDriveServiceReq := newDriveServiceRequest{
+		UserID: req.UserID,
+		Email:  req.Email,
+	}
+
+	srv, err := service.newDriveService(ctx, &newDriveServiceReq)
+
 	if err != nil {
 		return nil, fmt.Errorf("error creating google drive service: %w", err)
 	}
@@ -46,6 +49,7 @@ func (service *GoogleDriveService) CreateFolder(ctx context.Context, req *Create
 
 type ListFoldersRequest struct {
 	UserID    string `json:"user_id"`
+	Email     string `json:"email"`
 	PageSize  int64  `json:"page_size"`
 	PageToken string `json:"page_token"`
 }
@@ -59,7 +63,12 @@ func (l *ListFoldersRequest) HasPageSize() bool {
 }
 
 func (service *GoogleDriveService) ListFolders(ctx context.Context, req *ListFoldersRequest) ([]*drive.File, string, error) {
-	srv, err := service.newDriveService(ctx, req.UserID)
+	newDriveServiceReq := newDriveServiceRequest{
+		UserID: req.UserID,
+		Email:  req.Email,
+	}
+
+	srv, err := service.newDriveService(ctx, &newDriveServiceReq)
 	if err != nil {
 		return nil, "", fmt.Errorf("error creating google drive service: %w", err)
 	}
@@ -88,6 +97,7 @@ func (service *GoogleDriveService) ListFolders(ctx context.Context, req *ListFol
 
 type UploadFileRequest struct {
 	UserID   string    `json:"user_id"`
+	Email    string    `json:"email"`
 	FileName string    `json:"file_name"`
 	MimeType string    `json:"mime_type"`
 	FileData io.Reader `json:"file_data"`
@@ -99,7 +109,13 @@ func (u *UploadFileRequest) Sanitize() {
 }
 
 func (service *GoogleDriveService) UploadFile(ctx context.Context, req *UploadFileRequest) (*drive.File, error) {
-	srv, err := service.newDriveService(ctx, req.UserID)
+	newDriveServiceReq := newDriveServiceRequest{
+		UserID: req.UserID,
+		Email:  req.Email,
+	}
+
+	srv, err := service.newDriveService(ctx, &newDriveServiceReq)
+
 	if err != nil {
 		return nil, fmt.Errorf("error creating google drive service: %w", err)
 	}
@@ -138,11 +154,18 @@ func (service *GoogleDriveService) UploadFile(ctx context.Context, req *UploadFi
 
 type ListFilesInFolderRequest struct {
 	UserID   string `json:"user_id"`
+	Email    string `json:"email"`
 	FolderID string `json:"folder_id"`
 }
 
 func (service *GoogleDriveService) ListFilesInFolder(ctx context.Context, req *ListFilesInFolderRequest) ([]*drive.File, error) {
-	srv, err := service.newDriveService(ctx, req.UserID)
+	newDriveServiceReq := newDriveServiceRequest{
+		UserID: req.UserID,
+		Email:  req.Email,
+	}
+
+	srv, err := service.newDriveService(ctx, &newDriveServiceReq)
+
 	if err != nil {
 		return nil, fmt.Errorf("error creating google drive service: %w", err)
 	}
@@ -163,13 +186,20 @@ func (service *GoogleDriveService) ListFilesInFolder(ctx context.Context, req *L
 
 type DeleteResourceRequest struct {
 	UserID     string `json:"user_id"`
+	Email      string `json:"email"`
 	ResourceID string `json:"resource_id"`
 }
 
 func (service *GoogleDriveService) Delete(ctx context.Context, req *DeleteResourceRequest) error {
-	srv, err := service.newDriveService(ctx, req.UserID)
+	newDriveServiceReq := newDriveServiceRequest{
+		UserID: req.UserID,
+		Email:  req.Email,
+	}
+
+	srv, err := service.newDriveService(ctx, &newDriveServiceReq)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating google drive service: %w", err)
 	}
 
 	return srv.Files.Delete(req.ResourceID).Do()
@@ -177,22 +207,35 @@ func (service *GoogleDriveService) Delete(ctx context.Context, req *DeleteResour
 
 type GetFileRequest struct {
 	UserID string `json:"user_id"`
+	Email  string `json:"email"`
 	FileID string `json:"file_id"`
 }
 
 func (service *GoogleDriveService) GetFile(ctx context.Context, req *GetFileRequest) (*drive.File, error) {
-	srv, err := service.newDriveService(ctx, req.UserID)
+	newDriveServiceReq := newDriveServiceRequest{
+		UserID: req.UserID,
+		Email:  req.Email,
+	}
+
+	srv, err := service.newDriveService(ctx, &newDriveServiceReq)
+
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error creating google drive service: %w", err)
 	}
 
 	return srv.Files.Get(req.FileID).Do()
 }
 
 func (service *GoogleDriveService) GetFileWithURL(ctx context.Context, req *GetFileRequest) (*drive.File, error) {
-	srv, err := service.newDriveService(ctx, req.UserID)
+	newDriveServiceReq := newDriveServiceRequest{
+		UserID: req.UserID,
+		Email:  req.Email,
+	}
+
+	srv, err := service.newDriveService(ctx, &newDriveServiceReq)
+
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error creating google drive service: %w", err)
 	}
 
 	return srv.Files.Get(req.FileID).Fields("webViewLink").Do()
@@ -200,6 +243,7 @@ func (service *GoogleDriveService) GetFileWithURL(ctx context.Context, req *GetF
 
 type DownloadFileRequest struct {
 	UserID string `json:"user_id"`
+	Email  string `json:"email"`
 	FileID string `json:"file_id"`
 }
 
@@ -212,9 +256,15 @@ type DownloadFileResponse struct {
 }
 
 func (service *GoogleDriveService) DownloadFile(ctx context.Context, req *DownloadFileRequest) (*DownloadFileResponse, error) {
-	srv, err := service.newDriveService(ctx, req.UserID)
+	newDriveServiceReq := newDriveServiceRequest{
+		UserID: req.UserID,
+		Email:  req.Email,
+	}
+
+	srv, err := service.newDriveService(ctx, &newDriveServiceReq)
+
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error creating google drive service: %w", err)
 	}
 
 	fileInfo, err := srv.Files.Get(req.FileID).Do(googleapi.QueryParameter("alt", "media"))
@@ -274,12 +324,19 @@ func (s *StorageInfo) FormatTwoDigits() {
 
 type GetStorageInfoRequest struct {
 	UserID string `json:"user_id"`
+	Email  string `json:"email"`
 }
 
 func (service *GoogleDriveService) GetStorageInfo(ctx context.Context, req *GetStorageInfoRequest) (*StorageInfo, error) {
-	srv, err := service.newDriveService(ctx, req.UserID)
+	newDriveServiceReq := newDriveServiceRequest{
+		UserID: req.UserID,
+		Email:  req.Email,
+	}
+
+	srv, err := service.newDriveService(ctx, &newDriveServiceReq)
+
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error creating google drive service: %w", err)
 	}
 
 	about := srv.About.Get()
@@ -324,6 +381,7 @@ func (service *GoogleDriveService) GetStorageInfo(ctx context.Context, req *GetS
 // RenameResourceRequest represents the request to rename a file or folder
 type RenameResourceRequest struct {
 	UserID     string `json:"user_id" validate:"required"`
+	Email      string `json:"email" validate:"required"`
 	ResourceID string `json:"resource_id" validate:"required"`
 	NewName    string `json:"new_name" validate:"required"`
 }
@@ -348,7 +406,13 @@ func (service *GoogleDriveService) RenameResource(ctx context.Context, req *Rena
 	}
 
 	// Get Drive service
-	srv, err := service.newDriveService(ctx, req.UserID)
+	newDriveServiceReq := newDriveServiceRequest{
+		UserID: req.UserID,
+		Email:  req.Email,
+	}
+
+	srv, err := service.newDriveService(ctx, &newDriveServiceReq)
+
 	if err != nil {
 		return nil, fmt.Errorf("error creating google drive service: %w", err)
 	}
@@ -377,15 +441,22 @@ func (service *GoogleDriveService) RenameResource(ctx context.Context, req *Rena
 
 type MoveResourceRequest struct {
 	UserID       string   `json:"user_id" validate:"required"`
+	Email        string   `json:"email" validate:"required"`
 	ResourceID   string   `json:"resource_id" validate:"required"`
 	NewParentID  string   `json:"new_parent_id" validate:"required"`
 	OldParentIDs []string `json:"old_parent_ids,omitempty"`
 }
 
 func (service *GoogleDriveService) MoveResource(ctx context.Context, req *MoveResourceRequest) (*drive.File, error) {
-	srv, err := service.newDriveService(ctx, req.UserID)
+	newDriveServiceReq := newDriveServiceRequest{
+		UserID: req.UserID,
+		Email:  req.Email,
+	}
+
+	srv, err := service.newDriveService(ctx, &newDriveServiceReq)
+
 	if err != nil {
-		return nil, fmt.Errorf("error creating drive service: %w", err)
+		return nil, fmt.Errorf("error creating google drive service: %w", err)
 	}
 
 	// Prepare the file with new parent
@@ -413,15 +484,22 @@ func (service *GoogleDriveService) MoveResource(ctx context.Context, req *MoveRe
 
 type CopyResourceRequest struct {
 	UserID              string `json:"user_id" validate:"required"`
+	Email               string `json:"email" validate:"required"`
 	ResourceID          string `json:"resource_id" validate:"required"`
 	DestinationParentID string `json:"destination_parent_id" validate:"required"`
 	NewName             string `json:"new_name,omitempty"`
 }
 
 func (service *GoogleDriveService) CopyResource(ctx context.Context, req *CopyResourceRequest) (*drive.File, error) {
-	srv, err := service.newDriveService(ctx, req.UserID)
+	newDriveServiceReq := newDriveServiceRequest{
+		UserID: req.UserID,
+		Email:  req.Email,
+	}
+
+	srv, err := service.newDriveService(ctx, &newDriveServiceReq)
+
 	if err != nil {
-		return nil, fmt.Errorf("error creating drive service: %w", err)
+		return nil, fmt.Errorf("error creating google drive service: %w", err)
 	}
 
 	// Prepare copy metadata
@@ -444,6 +522,7 @@ func (service *GoogleDriveService) CopyResource(ctx context.Context, req *CopyRe
 
 type SearchResourcesRequest struct {
 	UserID    string `json:"user_id" validate:"required"`
+	Email     string `json:"email" validate:"required"`
 	Query     string `json:"query" validate:"required"`
 	PageToken string `json:"page_token,omitempty"`
 	PageSize  int64  `json:"page_size,omitempty"`
@@ -452,9 +531,15 @@ type SearchResourcesRequest struct {
 }
 
 func (service *GoogleDriveService) SearchResources(ctx context.Context, req *SearchResourcesRequest) ([]*drive.File, string, error) {
-	srv, err := service.newDriveService(ctx, req.UserID)
+	newDriveServiceReq := newDriveServiceRequest{
+		UserID: req.UserID,
+		Email:  req.Email,
+	}
+
+	srv, err := service.newDriveService(ctx, &newDriveServiceReq)
+
 	if err != nil {
-		return nil, "", fmt.Errorf("error creating drive service: %w", err)
+		return nil, "", fmt.Errorf("error creating google drive service: %w", err)
 	}
 
 	// Build search query
@@ -487,6 +572,7 @@ func (service *GoogleDriveService) SearchResources(ctx context.Context, req *Sea
 
 type UpdatePermissionRequest struct {
 	UserID       string `json:"user_id" validate:"required"`
+	Email        string `json:"email" validate:"required"`
 	ResourceID   string `json:"resource_id" validate:"required"`
 	EmailAddress string `json:"email_address" validate:"required,email"`
 	Role         string `json:"role" validate:"required,oneof=reader writer owner"`
@@ -495,9 +581,15 @@ type UpdatePermissionRequest struct {
 }
 
 func (service *GoogleDriveService) UpdatePermissions(ctx context.Context, req *UpdatePermissionRequest) error {
-	srv, err := service.newDriveService(ctx, req.UserID)
+	newDriveServiceReq := newDriveServiceRequest{
+		UserID: req.UserID,
+		Email:  req.Email,
+	}
+
+	srv, err := service.newDriveService(ctx, &newDriveServiceReq)
+
 	if err != nil {
-		return fmt.Errorf("error creating drive service: %w", err)
+		return fmt.Errorf("error creating google drive service: %w", err)
 	}
 
 	permission := &drive.Permission{
@@ -537,15 +629,21 @@ type ResourceMetadata struct {
 
 type GetMetadataRequest struct {
 	UserID     string `json:"user_id" validate:"required"`
+	Email      string `json:"email" validate:"required"`
 	ResourceID string `json:"resource_id" validate:"required"`
 }
 
 func (service *GoogleDriveService) GetResourceMetadata(ctx context.Context, req *GetMetadataRequest) (*ResourceMetadata, error) {
-	srv, err := service.newDriveService(ctx, req.UserID)
-	if err != nil {
-		return nil, fmt.Errorf("error creating drive service: %w", err)
+	newDriveServiceReq := newDriveServiceRequest{
+		UserID: req.UserID,
+		Email:  req.Email,
 	}
 
+	srv, err := service.newDriveService(ctx, &newDriveServiceReq)
+
+	if err != nil {
+		return nil, fmt.Errorf("error creating google drive service: %w", err)
+	}
 	file, err := srv.Files.Get(req.ResourceID).
 		Fields("id, name, mimeType, size, createdTime, modifiedTime, viewedByMeTime, owners, sharedWithMeTime, starred, trashed, webViewLink, iconLink, permissions").
 		Do()
@@ -594,13 +692,20 @@ func (service *GoogleDriveService) GetResourceMetadata(ctx context.Context, req 
 
 type RestoreRequest struct {
 	UserID     string `json:"user_id" validate:"required"`
+	Email      string `json:"email" validate:"required"`
 	ResourceID string `json:"resource_id" validate:"required"`
 }
 
 func (service *GoogleDriveService) RestoreFromTrash(ctx context.Context, req *RestoreRequest) error {
-	srv, err := service.newDriveService(ctx, req.UserID)
+	newDriveServiceReq := newDriveServiceRequest{
+		UserID: req.UserID,
+		Email:  req.Email,
+	}
+
+	srv, err := service.newDriveService(ctx, &newDriveServiceReq)
+
 	if err != nil {
-		return fmt.Errorf("error creating drive service: %w", err)
+		return fmt.Errorf("error creating google drive service: %w", err)
 	}
 
 	// Untrash the file
@@ -617,12 +722,19 @@ func (service *GoogleDriveService) RestoreFromTrash(ctx context.Context, req *Re
 
 type EmptyTrashRequest struct {
 	UserID string `json:"user_id" validate:"required"`
+	Email  string `json:"email" validate:"required"`
 }
 
 func (service *GoogleDriveService) EmptyTrash(ctx context.Context, req *EmptyTrashRequest) error {
-	srv, err := service.newDriveService(ctx, req.UserID)
+	newDriveServiceReq := newDriveServiceRequest{
+		UserID: req.UserID,
+		Email:  req.Email,
+	}
+
+	srv, err := service.newDriveService(ctx, &newDriveServiceReq)
+
 	if err != nil {
-		return fmt.Errorf("error creating drive service: %w", err)
+		return fmt.Errorf("error creating google drive service: %w", err)
 	}
 
 	err = srv.Files.EmptyTrash().Do()
@@ -635,6 +747,7 @@ func (service *GoogleDriveService) EmptyTrash(ctx context.Context, req *EmptyTra
 
 type ExportFileRequest struct {
 	UserID   string `json:"user_id" validate:"required"`
+	Email    string `json:"email" validate:"required"`
 	FileID   string `json:"file_id" validate:"required"`
 	MimeType string `json:"mime_type" validate:"required"`
 }
@@ -646,9 +759,15 @@ type ExportFileResponse struct {
 }
 
 func (service *GoogleDriveService) ExportFile(ctx context.Context, req *ExportFileRequest) (*ExportFileResponse, error) {
-	srv, err := service.newDriveService(ctx, req.UserID)
+	newDriveServiceReq := newDriveServiceRequest{
+		UserID: req.UserID,
+		Email:  req.Email,
+	}
+
+	srv, err := service.newDriveService(ctx, &newDriveServiceReq)
+
 	if err != nil {
-		return nil, fmt.Errorf("error creating drive service: %w", err)
+		return nil, fmt.Errorf("error creating google drive service: %w", err)
 	}
 
 	response, err := srv.Files.Export(req.FileID, req.MimeType).Download()

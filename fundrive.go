@@ -2,6 +2,7 @@ package fundrive
 
 import (
 	"fmt"
+	"golang.org/x/oauth2"
 	"gorm.io/gorm"
 )
 
@@ -51,6 +52,11 @@ func (c *Config) validate() error {
 	return nil
 }
 
+type GoogleDriveService struct {
+	oAuthService IOAuthService
+	OauthConfig  *oauth2.Config
+}
+
 // New creates a new instance of IGoogleDriveService with the provided configuration
 func New(opts ...ConfigOption) (*GoogleDriveService, error) {
 	// Start with default configuration
@@ -92,6 +98,7 @@ func New(opts ...ConfigOption) (*GoogleDriveService, error) {
 	// Create service instance
 	service := GoogleDriveService{
 		oAuthService: oauthService,
+		OauthConfig:  oauth2Config,
 	}
 
 	return &service, nil

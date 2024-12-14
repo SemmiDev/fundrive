@@ -3,8 +3,10 @@
 Integrasi Go dengan Oauth2 dan Google Drive API.  
 
 ### Catatan
-Library ini masih dalam tahap pengembangan.
-Saat ini, library ini hanya menyediakan fungsi-fungsi dasar yang sesuai dengan kebutuhan kami. 😊
+- Saat ini, library ini hanya menyediakan fungsi-fungsi dasar yang sesuai dengan kebutuhan kami. 😊
+- Ketika membuat service account, jangan lupa untuk mengaktifkan service Google Drive API.
+- Pada OAuth consent screen pilih Production pada Publishing status agar refresh token tidak expired.
+
 
 ### Referensi
 

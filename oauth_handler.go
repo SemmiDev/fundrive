@@ -1,185 +1,120 @@
 package fundrive
 
 import (
-    "github.com/gofiber/fiber/v2"
-    "golang.org/x/oauth2"
-    "net/http"
-    "net/url"
+	"github.com/gofiber/fiber/v2"
+	"golang.org/x/oauth2"
+	"gorm.io/gorm"
+	"net/http"
+	"net/url"
 )
 
-type OAuthController struct {
-    oauthService IOAuthService
-    oauth2Config *oauth2.Config
+type OAuthHandler struct {
+	oauth2Config *oauth2.Config
+	db           *gorm.DB
 }
 
-func NewOAuthController(
-    oauthService IOAuthService,
-    oauth2Config *oauth2.Config,
-) OAuthController {
-    return OAuthController{
-        oauthService: oauthService,
-        oauth2Config: oauth2Config,
-    }
+func NewOAuthHandler(
+	oauth2Config *oauth2.Config,
+	db *gorm.DB,
+) OAuthHandler {
+	return OAuthHandler{
+		oauth2Config: oauth2Config,
+		db:           db,
+	}
 }
 
-func (controller *OAuthController) Route(app *fiber.App) {
-    app.Get("/auth/google/authorize", controller.AuthorizeHandler)
-    app.Get("/auth/google/callback", controller.AuthorizeCallbackHandler)
-    app.Get("/auth/google/token", controller.GetTokenHandler)
-    app.Get("/auth/google/token/exists", controller.TokenExistsHandler)
+func (handler *OAuthHandler) Route(app *fiber.App) {
+	app.Get("/auth/google/authorize", handler.AuthorizeHandler)
+	app.Get("/auth/google/callback", handler.AuthorizeCallbackHandler)
 }
 
 type AuthorizeResponse struct {
-    URL string `json:"url"`
+	URL string `json:"url"`
 }
 
-func (controller *OAuthController) AuthorizeHandler(c *fiber.Ctx) error {
-    redirectURL := c.Query("redirect_url")
-    userId := c.Query("user_id")
-    if userId == "" {
-        return c.Status(400).JSON(fiber.Map{
-            "code":    http.StatusBadRequest,
-            "success": false,
-            "message": http.StatusText(http.StatusBadRequest),
-            "details": "user_id is required",
-        })
-    }
+func (handler *OAuthHandler) AuthorizeHandler(c *fiber.Ctx) error {
+	redirectURL := c.Query("redirect_url")
 
-    queryParams := url.Values{
-        "user_id":      {userId},
-        "redirect_url": {redirectURL},
-    }
+	queryParams := url.Values{
+		"redirect_url": {redirectURL},
+	}
 
-    // https://medium.com/starthinker/google-oauth-2-0-access-token-and-refresh-token-explained-cccf2fc0a6d9
-    authCodeOpt := []oauth2.AuthCodeOption{
-        oauth2.AccessTypeOffline, // obtain the refresh token
-        oauth2.ApprovalForce,     // forces the users to view the consent dialog
-    }
+	// https://medium.com/starthinker/google-oauth-2-0-access-token-and-refresh-token-explained-cccf2fc0a6d9
+	authCodeOpt := []oauth2.AuthCodeOption{
+		oauth2.AccessTypeOffline, // obtain the refresh token
+		oauth2.ApprovalForce,     // forces the users to view the consent dialog
+	}
 
-    loginUrl := controller.oauth2Config.AuthCodeURL(queryParams.Encode(), authCodeOpt...)
-
-    return c.Status(200).JSON(WebResponse[AuthorizeResponse]{
-        Code:    200,
-        Status:  http.StatusText(200),
-        Success: true,
-        Data:    AuthorizeResponse{URL: loginUrl},
-    })
+	loginUrl := handler.oauth2Config.AuthCodeURL(queryParams.Encode(), authCodeOpt...)
+	return c.Redirect(loginUrl, http.StatusFound)
 }
 
-func (controller *OAuthController) AuthorizeCallbackHandler(c *fiber.Ctx) error {
-    code := c.Query("code")
+func (handler *OAuthHandler) AuthorizeCallbackHandler(c *fiber.Ctx) error {
+	code := c.Query("code")
+	state := c.Query("state")
 
-    state := c.Query("state")
-    queryParams, _ := url.ParseQuery(state)
+	queryParams, _ := url.ParseQuery(state)
+	redirectURL := queryParams.Get("redirect_url")
 
-    userId := queryParams.Get("user_id")
-    redirectURL := queryParams.Get("redirect_url")
+	token, err := handler.oauth2Config.Exchange(c.Context(), code)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"code":    http.StatusInternalServerError,
+			"success": false,
+			"message": http.StatusText(http.StatusInternalServerError),
+			"details": err.Error(),
+		})
+	}
 
-    token, err := controller.oauth2Config.Exchange(c.Context(), code)
-    if err != nil {
-        return c.Status(500).JSON(fiber.Map{
-            "code":    http.StatusInternalServerError,
-            "success": false,
-            "message": http.StatusText(http.StatusInternalServerError),
-            "details": err.Error(),
-        })
-    }
+	oAuthConfig := OAuthConfig{
+		DB:           handler.db,
+		OAuth2Config: handler.oauth2Config,
+	}
 
-    err = controller.oauthService.SaveToken(c.Context(), userId, token)
-    if err != nil {
-        return c.Status(500).JSON(fiber.Map{
-            "code":    http.StatusInternalServerError,
-            "success": false,
-            "message": http.StatusText(http.StatusInternalServerError),
-            "details": err.Error(),
-        })
-    }
+	oauthService, err := NewOAuthService(&oAuthConfig)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"code":    http.StatusInternalServerError,
+			"success": false,
+			"message": http.StatusText(http.StatusInternalServerError),
+			"details": err.Error(),
+		})
+	}
 
-    if redirectURL != "" {
-        return c.Redirect(redirectURL, http.StatusFound)
-    }
+	userInfo, err := oauthService.GetGoogleUserInfo(c.Context(), &GetUserInfoRequest{Token: token})
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"code":    http.StatusInternalServerError,
+			"success": false,
+			"message": http.StatusText(http.StatusInternalServerError),
+			"details": err.Error(),
+		})
+	}
 
-    return c.Status(200).JSON(fiber.Map{
-        "code":    200,
-        "success": true,
-        "message": http.StatusText(200),
-        "details": "Token has been saved",
-    })
-}
+	saveTokenReq := SaveTokenRequest{
+		UserID: userInfo.ID,
+		Email:  userInfo.Email,
+		Token:  token,
+	}
 
-func (controller *OAuthController) GetTokenHandler(c *fiber.Ctx) error {
-    userId := c.Query("user_id")
-    if userId == "" {
-        return c.Status(400).JSON(fiber.Map{
-            "code":    http.StatusBadRequest,
-            "success": false,
-            "message": http.StatusText(http.StatusBadRequest),
-            "details": "user_id is required",
-        })
-    }
+	err = oauthService.SaveToken(c.Context(), &saveTokenReq)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"code":    http.StatusInternalServerError,
+			"success": false,
+			"message": http.StatusText(http.StatusInternalServerError),
+			"details": err.Error(),
+		})
+	}
 
-    token, err := controller.oauthService.GetToken(c.Context(), userId)
-    if err != nil {
-        return c.Status(500).JSON(fiber.Map{
-            "code":    http.StatusInternalServerError,
-            "success": false,
-            "message": http.StatusText(http.StatusInternalServerError),
-            "details": err.Error(),
-        })
-    }
+	if redirectURL != "" {
+		return c.Redirect(redirectURL, http.StatusFound)
+	}
 
-    return c.Status(200).JSON(fiber.Map{
-        "code":    200,
-        "success": true,
-        "message": http.StatusText(200),
-        "details": "Token has been retrieved",
-        "data":    token,
-    })
-}
-
-func (controller *OAuthController) TokenExistsHandler(c *fiber.Ctx) error {
-    userId := c.Query("user_id")
-    if userId == "" {
-        return c.Status(400).JSON(fiber.Map{
-            "code":    http.StatusBadRequest,
-            "success": false,
-            "message": http.StatusText(http.StatusBadRequest),
-            "details": "user_id is required",
-        })
-    }
-
-    exist, err := controller.oauthService.IsTokenExists(c.Context(), userId)
-    if err != nil {
-        return c.Status(500).JSON(fiber.Map{
-            "code":    http.StatusInternalServerError,
-            "success": false,
-            "message": http.StatusText(http.StatusInternalServerError),
-            "details": err.Error(),
-        })
-    }
-
-    return c.Status(200).JSON(fiber.Map{
-        "code":    200,
-        "success": true,
-        "message": http.StatusText(200),
-        "data":    fiber.Map{"exists": exist},
-    })
-}
-
-type WebResponse[T any] struct {
-    Code    int    `json:"code"`
-    Status  string `json:"message"`
-    Success bool   `json:"success"`
-    Data    T      `json:"data"`
-}
-
-type ErrorResponse struct {
-    Code    int    `json:"code"`
-    Success bool   `json:"success"`
-    Message string `json:"message"`
-    Details string `json:"details"`
-}
-
-func (e ErrorResponse) Error() string {
-    return e.Message
+	return c.Status(200).JSON(fiber.Map{
+		"code":    200,
+		"success": true,
+		"message": http.StatusText(200),
+		"details": userInfo,
+	})
 }
