@@ -12,7 +12,7 @@ Fun Drive menyederhanakan integrasi Google Drive untuk aplikasi yang perlu menan
 
 ### Latar Belakang
 
-Aplikasi X memerlukan fitur bagi penggunanya untuk dapat mengakses dan mengelola file Google Drive mereka secara langsung melalui aplikasi. Karea pengguna dapat menghubungkan beberapa akun email, mereka mungkin memiliki beberapa akun Google Drive. Library ini membantu Aplikasi X mengelola berbagai aspek termasuk:
+Aplikasi X memerlukan fitur bagi penggunanya untuk dapat mengakses dan mengelola file Google Drive mereka secara langsung melalui aplikasi. Karena pengguna dapat menghubungkan beberapa akun email, mereka mungkin memiliki beberapa akun Google Drive. Library ini membantu Aplikasi X mengelola berbagai aspek termasuk:
 
 - Manajemen token
 - Penanganan layanan Google Drive
