@@ -19,7 +19,7 @@ type OAuthToken struct {
 
 // TableName returns the table name
 func (o *OAuthToken) TableName() string {
-	return "oauth_tokens"
+	return "fundrive_oauth_tokens"
 }
 
 // ToOAuth2Token converts OAuthToken to oauth2.Token
