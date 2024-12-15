@@ -53,7 +53,7 @@ func (c *Config) validate() error {
 }
 
 type GoogleDriveService struct {
-	oAuthService IOAuthService
+	OAuthService IOAuthService
 	OauthConfig  *oauth2.Config
 }
 
@@ -97,7 +97,7 @@ func New(opts ...ConfigOption) (*GoogleDriveService, error) {
 
 	// Create service instance
 	service := GoogleDriveService{
-		oAuthService: oauthService,
+		OAuthService: oauthService,
 		OauthConfig:  oauth2Config,
 	}
 

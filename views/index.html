@@ -1,40 +1,27 @@
+{{define "index"}}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign in with Google</title>
+    <title>
+        {{ .Title }}
+    </title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body
-    style="
-         font-family: Arial, sans-serif;
-         background-color: #f0f0f0;
-         display: flex;
-         justify-content: center;
-         align-items: center;
-         height: 100vh;"
->
-<div
-    style="
-        background-color: #fff;
-        padding: 40px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        text-align: center;"
->
-    <h1 style="color: #333; margin-bottom: 20px;">Welcome</h1>
-    <a href="/auth/google/authorize"  style="
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #4285f4;
-        color: #fff;
-        text-decoration: none;
-        padding: 12px 20px;
-        border-radius: 4px;
-        transition: background-color 0.3s ease;">
-        <span style="font-size: 16px; font-weight: bold;">Sign in with Google</span>
-    </a>
-</div>
+
+<body>
+    <div class="flex items-center justify-center h-screen dark:bg-gray-800">
+        <a
+            href="/auth/google/authorize"
+            class="px-4 py-2 border flex gap-2 border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-slate-300 hover:shadow transition duration-150">
+            <img class="w-6 h-6" src="https://www.svgrepo.com/show/475656/google-color.svg" loading="lazy"
+                 alt="google logo">
+            <span>Continue with Google</span>
+        </a>
+    </div>
 </body>
 </html>
+
+{{end}}

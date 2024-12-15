@@ -12,3 +12,4 @@ Integrasi Go dengan Oauth2 dan Google Drive API.
 
 - [access token and refresh token explained](https://medium.com/starthinker/google-oauth-2-0-access-token-and-refresh-token-explained-cccf2fc0a6d9)
 - [google api refresh token expiring](https://stackoverflow.com/questions/71375097/google-api-refresh-token-expiring)
+- [storageQuota.limit](https://developers.google.com/drive/api/reference/rest/v3/about)

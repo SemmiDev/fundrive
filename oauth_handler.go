@@ -91,6 +91,8 @@ func (handler *OAuthHandler) AuthorizeCallbackHandler(c *fiber.Ctx) error {
 		})
 	}
 
+	userInfo.ID = "user-dev" // dummy user, simulate multiple email with same ID
+
 	saveTokenReq := SaveTokenRequest{
 		UserID: userInfo.ID,
 		Email:  userInfo.Email,
@@ -111,10 +113,6 @@ func (handler *OAuthHandler) AuthorizeCallbackHandler(c *fiber.Ctx) error {
 		return c.Redirect(redirectURL, http.StatusFound)
 	}
 
-	return c.Status(200).JSON(fiber.Map{
-		"code":    200,
-		"success": true,
-		"message": http.StatusText(200),
-		"details": userInfo,
-	})
+	// redirec to /home
+	return c.Redirect("/home", http.StatusFound)
 }

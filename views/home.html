@@ -1,0 +1,36 @@
+{{define "home"}}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+<div class="flex flex-col space-y-2 w-full max-w-xl">
+    <div class="flex flex-col space-y-4 w-full max-w-xl">
+        {{ range .ListStorageInfo }}
+                <div class="border border-gray-300 rounded-lg p-4 w-full shadow-sm bg-white">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-semibold text-gray-800">Penyimpanan</span>
+                        <span class="text-sm text-gray-500">{{ .Limit }} B</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+                        <div class="bg-blue-500 h-2.5 rounded-full" style="width: {{ .UsagePercentage }}%"></div>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500">
+                    {{ .Usage }} B digunakan
+                </p>
+            </div>
+        {{ end }}
+    </div>
+</div>
+
+</body>
+</html>
+
+{{end}}
