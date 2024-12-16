@@ -37,7 +37,7 @@ func (s *OAuthService) SaveToken(ctx context.Context, req *SaveTokenRequest) err
 		return err
 	}
 
-	tx := s.db.WithContext(ctx).Begin()
+	tx := s.DB.WithContext(ctx).Begin()
 	defer tx.Rollback()
 
 	var existingToken OAuthToken

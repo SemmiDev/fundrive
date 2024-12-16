@@ -33,7 +33,7 @@ func (s *OAuthService) GetToken(ctx context.Context, req *GetTokenRequest) (*oau
 	}
 
 	var oauthToken OAuthToken
-	err := s.db.WithContext(ctx).
+	err := s.DB.WithContext(ctx).
 		Where("user_id = ? AND email = ?", req.UserID, req.Email).
 		First(&oauthToken).
 		Error

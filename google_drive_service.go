@@ -3,11 +3,13 @@ package fundrive
 import (
 	"context"
 	"fmt"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/googleapi"
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -285,16 +287,72 @@ func (service *GoogleDriveService) DownloadFile(ctx context.Context, req *Downlo
 	}, nil
 }
 
-type GetStorageInfoRequest struct {
-	UserID string `json:"user_id"`
-	Email  string `json:"email"`
-}
-type StorageInfo struct {
-	Limit            int64 `json:"limit"`
-	Usage            int64 `json:"usage"`
-	Remaining        int64 `json:"remaining"`
-	UsagePercentage  int64 `json:"usagePercentage"`
-	IsUnlimitedQuota bool  `json:"isUnlimitedQuota"`
+type (
+	GetStorageInfoRequest struct {
+		UserID string `json:"user_id"`
+		Email  string `json:"email"`
+	}
+
+	ListStorageInfoRequest struct {
+		UserID string `json:"user_id"`
+	}
+
+	StorageInfo struct {
+		Limit           int64 `json:"limit"`
+		Usage           int64 `json:"usage"`
+		Remaining       int64 `json:"remaining"`
+		UsagePercentage int64 `json:"usage_percentage"`
+		IsUnlimited     bool  `json:"is_unlimited"`
+	}
+)
+
+func (service *GoogleDriveService) ListStorageInfo(ctx context.Context, req *ListStorageInfoRequest) ([]StorageInfo, error) {
+	type listUserEmailRequest struct {
+		Email string `json:"email"`
+	}
+
+	listUserEmail := make([]listUserEmailRequest, 0)
+	if err := service.DB.
+		Model(&OAuthToken{}).
+		Where("user_id = ?", req.UserID).
+		Select("email").
+		Scan(&listUserEmail).
+		Error; err != nil {
+		return nil, err
+	}
+
+	var (
+		mu          sync.Mutex
+		listStorage []StorageInfo
+	)
+
+	g, gCtx := errgroup.WithContext(ctx)
+
+	for _, email := range listUserEmail {
+		// Capture email untuk digunakan di goroutine
+		email := email.Email
+
+		g.Go(func() error {
+			storageInfo, err := service.GetStorageInfo(gCtx, &GetStorageInfoRequest{
+				UserID: req.UserID,
+				Email:  email,
+			})
+			if err != nil {
+				return err
+			}
+
+			mu.Lock()
+			listStorage = append(listStorage, *storageInfo)
+			mu.Unlock()
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
+
+	return listStorage, nil
 }
 
 func (service *GoogleDriveService) GetStorageInfo(ctx context.Context, req *GetStorageInfoRequest) (*StorageInfo, error) {
@@ -322,7 +380,7 @@ func (service *GoogleDriveService) GetStorageInfo(ctx context.Context, req *GetS
 	}
 
 	if quota.Limit == 0 || quota.Limit == -1 {
-		info.IsUnlimitedQuota = true
+		info.IsUnlimited = true
 	} else {
 		info.Remaining = quota.Limit - quota.Usage
 		info.UsagePercentage = (quota.Usage * 100) / quota.Limit

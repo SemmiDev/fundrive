@@ -47,8 +47,8 @@ func (c *OAuthConfig) Validate() error {
 
 // OAuthService implements IOAuthService interface
 type OAuthService struct {
-	db             *gorm.DB
-	oauthConfig    *oauth2.Config
+	DB             *gorm.DB
+	OauthConfig    *oauth2.Config
 	TokenEncryptor *TokenEncryption
 }
 
@@ -59,8 +59,8 @@ func NewOAuthService(config *OAuthConfig) (IOAuthService, error) {
 	}
 
 	return &OAuthService{
-		db:             config.DB,
-		oauthConfig:    config.OAuth2Config,
+		DB:             config.DB,
+		OauthConfig:    config.OAuth2Config,
 		TokenEncryptor: config.TokenEncryptor,
 	}, nil
 }

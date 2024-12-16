@@ -28,7 +28,7 @@ func (s *OAuthService) ExchangeToken(ctx context.Context, req *ExchangeTokenRequ
 		return nil, err
 	}
 
-	oauth2Token, err := CreateToken(s.oauthConfig, req.AuthorizationCode)
+	oauth2Token, err := CreateToken(s.OauthConfig, req.AuthorizationCode)
 	if err != nil {
 		return nil, err
 	}

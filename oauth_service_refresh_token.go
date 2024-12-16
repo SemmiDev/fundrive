@@ -12,7 +12,7 @@ func (s *OAuthService) RefreshToken(ctx context.Context, token *oauth2.Token) (*
 		return nil, ErrInvalidToken
 	}
 
-	tokenSource := s.oauthConfig.TokenSource(ctx, token)
+	tokenSource := s.OauthConfig.TokenSource(ctx, token)
 
 	newToken, err := tokenSource.Token()
 	if err != nil {

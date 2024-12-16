@@ -29,7 +29,7 @@ func (s *OAuthService) IsTokenExists(ctx context.Context, req *IsTokenExistsRequ
 	}
 
 	var count int64
-	err := s.db.WithContext(ctx).
+	err := s.DB.WithContext(ctx).
 		Model(&OAuthToken{}).
 		Where("user_id = ? AND email = ?", req.UserID, req.Email).
 		Count(&count).
