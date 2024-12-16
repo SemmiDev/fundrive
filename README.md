@@ -39,7 +39,6 @@ Library ini secara otomatis mengelola tabel `fundrive_oauth_tokens` di database 
 Lihat contoh implementasi di [main.go](./example/main.go)
 
 ### TODO
-- Exchange token di oauth service menggunakan authorization code
 
 ### Referensi
 - [Refresh token expiration](https://developers.google.com/identity/protocols/oauth2#expiration)
