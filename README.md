@@ -7,7 +7,7 @@ Fun Drive menyederhanakan integrasi Google Drive untuk aplikasi yang perlu menan
 
 ### Instalasi
 ```bash
-  go get -u github.com/SemmiDev/fundrive
+  go get -u github.com/semmidev/fundrive
 ```
 
 ### Latar Belakang
