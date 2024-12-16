@@ -1,13 +1,11 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"github.com/semmidev/fundrive"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"log"
-	"time"
 )
 
 func main() {
@@ -26,23 +24,6 @@ func main() {
 	)
 
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	// assume the client is already authenticated, and successfully retrieve a token, so lets save the token.
-	oauthToken := fundrive.OAuthToken{
-		Email:        "test2gmail.com",
-		AccessToken:  "xxx",
-		TokenType:    "Bearer",
-		RefreshToken: "yyy",
-		Expiry:       time.Now().Add(time.Hour * 24),
-	}
-
-	if err = fundriveService.OAuthService.SaveToken(context.Background(), &fundrive.SaveTokenRequest{
-		UserID: "123",
-		Email:  "xYV6u@example.com",
-		Token:  oauthToken.ToOAuth2Token(),
-	}); err != nil {
 		log.Fatal(err)
 	}
 

@@ -45,5 +45,10 @@ func (s *OAuthService) GetToken(ctx context.Context, req *GetTokenRequest) (*oau
 		return nil, fmt.Errorf("failed to get token: %w", err)
 	}
 
-	return oauthToken.ToOAuth2Token(), nil
+	oauth2Token, err := oauthToken.ToOAuth2Token(s.TokenEncryptor)
+	if err != nil {
+		return nil, err
+	}
+
+	return oauth2Token, nil
 }

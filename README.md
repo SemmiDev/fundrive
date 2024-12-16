@@ -42,6 +42,7 @@ Lihat contoh implementasi di [main.go](./example/main.go)
 - Exchange token di oauth service menggunakan authorization code
 
 ### Referensi
+- [Refresh token expiration](https://developers.google.com/identity/protocols/oauth2#expiration)
 - [Access token and refresh token explained](https://medium.com/starthinker/google-oauth-2-0-access-token-and-refresh-token-explained-cccf2fc0a6d9)
 - [Google api refresh token expiring](https://stackoverflow.com/questions/71375097/google-api-refresh-token-expiring)
 - [StorageQuota.limit](https://developers.google.com/drive/api/reference/rest/v3/about)

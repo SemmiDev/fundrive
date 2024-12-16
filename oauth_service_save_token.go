@@ -52,7 +52,9 @@ func (s *OAuthService) SaveToken(ctx context.Context, req *SaveTokenRequest) err
 			Email:  req.Email,
 		}
 
-		newToken.FromOAuth2Token(req.Token)
+		if err := newToken.FromOAuth2Token(req.Token, s.TokenEncryptor); err != nil {
+			return fmt.Errorf("failed to convert token: %w", err)
+		}
 
 		if err := tx.Create(&newToken).Error; err != nil {
 			return fmt.Errorf("failed to create token: %w", err)
@@ -60,7 +62,10 @@ func (s *OAuthService) SaveToken(ctx context.Context, req *SaveTokenRequest) err
 	} else if err != nil {
 		return fmt.Errorf("failed to query token: %w", err)
 	} else {
-		existingToken.FromOAuth2Token(req.Token)
+		if err := existingToken.FromOAuth2Token(req.Token, s.TokenEncryptor); err != nil {
+			return fmt.Errorf("failed to convert token: %w", err)
+		}
+
 		if err := tx.Save(&existingToken).Error; err != nil {
 			return fmt.Errorf("failed to update token: %w", err)
 		}
