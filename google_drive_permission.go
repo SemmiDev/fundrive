@@ -1,24 +1,27 @@
 package fundrive
 
 import (
-	"google.golang.org/api/drive/v3"
+    "google.golang.org/api/drive/v3"
 )
 
-var (
-	publicPermission = &drive.Permission{
-		Type: "anyone",
-		Role: "reader",
-	}
+type Permission string
 
-	privatePermission = &drive.Permission{
-		Type: "default",
-		Role: "owner",
-	}
+const (
+    PublicPermission  Permission = "public"
+    PrivatePermission Permission = "private"
 )
 
-func getPermission(permission string) *drive.Permission {
-	if permission == "private" {
-		return privatePermission
-	}
-	return publicPermission
+// getPermission returns the permission based on the permission type
+// default permission is public
+func getPermission(permission Permission) *drive.Permission {
+    if permission == PrivatePermission {
+        return &drive.Permission{
+            Type: "anyone",
+            Role: "reader",
+        }
+    }
+    return &drive.Permission{
+        Type: "default",
+        Role: "owner",
+    }
 }
