@@ -41,9 +41,11 @@ func (s *OAuthService) SaveToken(ctx context.Context, req *SaveTokenRequest) err
 	defer tx.Rollback()
 
 	var existingToken OAuthToken
+
 	err := tx.
 		Where("user_id = ? AND email = ?", req.UserID, req.Email).
-		First(&existingToken).Error
+		First(&existingToken).
+		Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		newToken := OAuthToken{

@@ -68,3 +68,12 @@ func (o *OAuthToken) FromOAuth2Token(token *oauth2.Token, encryption *TokenEncry
 
     return nil
 }
+
+func NewOauth2Token(accessToken string, refreshToken string, expiry time.Time) *oauth2.Token {
+    return &oauth2.Token{
+        AccessToken:  accessToken,
+        RefreshToken: refreshToken,
+        TokenType:    "Bearer",
+        Expiry:       expiry,
+    }
+}

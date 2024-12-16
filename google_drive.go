@@ -16,6 +16,7 @@ var (
 // Config represents the configuration for the Google Drive service
 type Config struct {
 	ServiceAccountFilePath string
+	EncryptionKey          string
 	DB                     *gorm.DB
 }
 
@@ -24,7 +25,11 @@ type ConfigOption func(*Config)
 
 // DefaultConfig returns a Config with default values
 func DefaultConfig() *Config {
-	return &Config{}
+	return &Config{
+		ServiceAccountFilePath: "",
+		EncryptionKey:          "",
+		DB:                     nil,
+	}
 }
 
 // WithServiceAccountFilePath sets the service account file path
@@ -41,6 +46,13 @@ func WithDB(db *gorm.DB) ConfigOption {
 	}
 }
 
+// WithEncryptionKey sets the encryption key
+func WithEncryptionKey(key string) ConfigOption {
+	return func(c *Config) {
+		c.EncryptionKey = key
+	}
+}
+
 // validate checks if the configuration is valid
 func (c *Config) validate() error {
 	if c.DB == nil {
@@ -49,6 +61,11 @@ func (c *Config) validate() error {
 	if c.ServiceAccountFilePath == "" {
 		return ErrServiceAccountEmpty
 	}
+
+	if c.EncryptionKey == "" {
+		return ErrServiceAccountEmpty
+	}
+
 	return nil
 }
 
@@ -83,10 +100,16 @@ func New(opts ...ConfigOption) (*GoogleDriveService, error) {
 		return nil, fmt.Errorf("failed to create OAuth config: %w", err)
 	}
 
+	tokenEncryptor, err := NewTokenEncryption(config.EncryptionKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create token encryption: %w", err)
+	}
+
 	// Initialize OAuth config
 	oauthConfig := OAuthConfig{
-		DB:           config.DB,
-		OAuth2Config: oauth2Config,
+		DB:             config.DB,
+		OAuth2Config:   oauth2Config,
+		TokenEncryptor: tokenEncryptor,
 	}
 
 	// Initialize OAuth service

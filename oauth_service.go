@@ -10,10 +10,11 @@ import (
 
 // Domain errors
 var (
-	ErrTokenNotFound = errors.New("token not found")
-	ErrInvalidToken  = errors.New("invalid token provided")
-	ErrInvalidUserID = errors.New("invalid user ID provided")
-	ErrInvalidEmail  = errors.New("invalid email provided")
+	ErrTokenNotFound            = errors.New("token not found")
+	ErrInvalidToken             = errors.New("invalid token provided")
+	ErrInvalidUserID            = errors.New("invalid user ID provided")
+	ErrInvalidEmail             = errors.New("invalid email provided")
+	ErrInvalidAuthorizationCode = errors.New("invalid authorization code provided")
 )
 
 // IOAuthService defines the interface for OAuth operations
@@ -23,6 +24,7 @@ type IOAuthService interface {
 	IsTokenExists(ctx context.Context, req *IsTokenExistsRequest) (bool, error)
 	RefreshToken(ctx context.Context, token *oauth2.Token) (*oauth2.Token, error)
 	GetGoogleUserInfo(ctx context.Context, req *GetUserInfoRequest) (*GoogleUserInfo, error)
+	ExchangeToken(ctx context.Context, req *ExchangeTokenRequest) (*oauth2.Token, error)
 }
 
 // OAuthConfig contains the configuration for OAuth service
