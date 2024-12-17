@@ -11,9 +11,11 @@ import (
 )
 
 type SaveTokenRequest struct {
-	UserID string        `json:"user_id"`
-	Email  string        `json:"email"`
-	Token  *oauth2.Token `json:"token"`
+	UserID          string        `json:"user_id"`
+	Email           string        `json:"email"`
+	BaseFolderID    *string       `json:"base_folder_id"`
+	ExpiryTimestamp *string       `json:"expiry_timestamp"`
+	Token           *oauth2.Token `json:"token"`
 }
 
 func (s *SaveTokenRequest) Validate() error {
@@ -48,17 +50,19 @@ func (s *OAuthService) SaveToken(ctx context.Context, req *SaveTokenRequest) err
 		Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		newToken := OAuthToken{
-			ID:     ulid.Make().String(),
-			UserID: req.UserID,
-			Email:  req.Email,
+		newOauthToken := OAuthToken{
+			ID:              ulid.Make().String(),
+			UserID:          req.UserID,
+			Email:           req.Email,
+			BaseFolderID:    req.BaseFolderID,
+			ExpiryTimestamp: req.ExpiryTimestamp,
 		}
 
-		if err := newToken.FromOAuth2Token(req.Token, s.TokenEncryptor); err != nil {
+		if err := newOauthToken.FromOAuth2Token(req.Token, s.TokenEncryptor); err != nil {
 			return fmt.Errorf("failed to convert token: %w", err)
 		}
 
-		if err := tx.Create(&newToken).Error; err != nil {
+		if err := tx.Create(&newOauthToken).Error; err != nil {
 			return fmt.Errorf("failed to create token: %w", err)
 		}
 	} else if err != nil {

@@ -16,11 +16,19 @@ type OAuthToken struct {
 	RefreshToken string    `json:"refresh_token" gorm:"column:refresh_token;type:longtext"`
 	TokenType    string    `json:"token_type" gorm:"column:token_type;type:varchar(50)"`
 	Expiry       time.Time `json:"expiry" gorm:"column:expiry;type:timestamp"`
+
+	// Etc
+	ExpiryTimestamp *string `json:"expiry_timestamp" gorm:"column:expiry_timestamp;type:text"`
+	BaseFolderID    *string `json:"base_folder_id" gorm:"column:base_folder_id;type:longtext"`
 }
 
 // TableName returns the table name
 func (o *OAuthToken) TableName() string {
 	return "fundrive_oauth_tokens"
+}
+
+func (o *OAuthToken) HasBaseFolderID() bool {
+	return o.BaseFolderID != nil
 }
 
 // ToOAuth2Token converts OAuthToken to oauth2.Token

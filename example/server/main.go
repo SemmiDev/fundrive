@@ -6,7 +6,6 @@ import (
 	"github.com/semmidev/fundrive"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"log"
 )
 
 func main() {
@@ -27,10 +26,8 @@ func main() {
 	fundrive.PanicIfNeeded(err)
 
 	handler := fundrive.NewOAuthHandler(fundriveService.OauthConfig, fundriveService.DB, fundriveService.TokenEncryptor)
-	app := fiber.New()
-	app.Get("/auth/google/authorize", handler.AuthorizeHandler)
-	app.Get("/auth/google/callback", handler.AuthorizeCallbackHandler)
 
-	log.Println("Listening on port 3000")
-	app.Listen(":3000")
+	app := fiber.New()
+	handler.Route(app)
+	handler.Run(app, "3000")
 }
