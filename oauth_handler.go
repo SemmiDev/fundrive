@@ -9,17 +9,20 @@ import (
 )
 
 type OAuthHandler struct {
-	oauth2Config *oauth2.Config
-	db           *gorm.DB
+	oauth2Config   *oauth2.Config
+	db             *gorm.DB
+	tokenEncryptor *TokenEncryption
 }
 
 func NewOAuthHandler(
 	oauth2Config *oauth2.Config,
 	db *gorm.DB,
+	tokenEncryptor *TokenEncryption,
 ) OAuthHandler {
 	return OAuthHandler{
-		oauth2Config: oauth2Config,
-		db:           db,
+		oauth2Config:   oauth2Config,
+		db:             db,
+		tokenEncryptor: tokenEncryptor,
 	}
 }
 
@@ -67,8 +70,9 @@ func (handler *OAuthHandler) AuthorizeCallbackHandler(c *fiber.Ctx) error {
 	}
 
 	oAuthConfig := OAuthConfig{
-		DB:           handler.db,
-		OAuth2Config: handler.oauth2Config,
+		DB:             handler.db,
+		OAuth2Config:   handler.oauth2Config,
+		TokenEncryptor: handler.tokenEncryptor,
 	}
 
 	oauthService, err := NewOAuthService(&oAuthConfig)
@@ -113,6 +117,10 @@ func (handler *OAuthHandler) AuthorizeCallbackHandler(c *fiber.Ctx) error {
 		return c.Redirect(redirectURL, http.StatusFound)
 	}
 
-	// redirec to /home
-	return c.Redirect("/home", http.StatusFound)
+	return c.Status(200).JSON(fiber.Map{
+		"code":    http.StatusOK,
+		"success": true,
+		"message": http.StatusText(http.StatusOK),
+		"details": userInfo,
+	})
 }

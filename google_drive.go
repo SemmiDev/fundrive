@@ -7,9 +7,10 @@ import (
 )
 
 type GoogleDriveService struct {
-	OAuthService IOAuthService
-	OauthConfig  *oauth2.Config
-	DB           *gorm.DB
+	OAuthService   IOAuthService
+	TokenEncryptor *TokenEncryption
+	OauthConfig    *oauth2.Config
+	DB             *gorm.DB
 }
 
 // New creates a new instance of IGoogleDriveService with the provided configuration
@@ -59,9 +60,10 @@ func New(opts ...GoogleDriveServiceConfigOption) (*GoogleDriveService, error) {
 
 	// Create service instance
 	service := GoogleDriveService{
-		OAuthService: oauthService,
-		OauthConfig:  oauth2Config,
-		DB:           config.DB,
+		OAuthService:   oauthService,
+		OauthConfig:    oauth2Config,
+		TokenEncryptor: tokenEncryptor,
+		DB:             config.DB,
 	}
 
 	return &service, nil
