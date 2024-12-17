@@ -17,6 +17,7 @@ type GoogleDriveServiceConfig struct {
 	ServiceAccountFilePath string
 	EncryptionKey          string
 	DB                     *gorm.DB
+	UseBaseFolder          bool
 }
 
 // GoogleDriveServiceConfigOption defines the function signature for optional configuration
@@ -45,6 +46,12 @@ func WithDB(db *gorm.DB) GoogleDriveServiceConfigOption {
 func WithEncryptionKey(key string) GoogleDriveServiceConfigOption {
 	return func(c *GoogleDriveServiceConfig) {
 		c.EncryptionKey = key
+	}
+}
+
+func WithUseBaseFolder(useBaseFolder bool) GoogleDriveServiceConfigOption {
+	return func(c *GoogleDriveServiceConfig) {
+		c.UseBaseFolder = useBaseFolder
 	}
 }
 

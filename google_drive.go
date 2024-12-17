@@ -7,10 +7,11 @@ import (
 )
 
 type GoogleDriveService struct {
-	OAuthService   IOAuthService
-	TokenEncryptor *TokenEncryption
-	OauthConfig    *oauth2.Config
-	DB             *gorm.DB
+	OAuthService    IOAuthService
+	TokenEncryptor  *TokenEncryption
+	OauthConfig     *oauth2.Config
+	DB              *gorm.DB
+	IsUseBaseFolder bool
 }
 
 // New creates a new instance of IGoogleDriveService with the provided configuration
